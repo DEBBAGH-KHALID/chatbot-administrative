@@ -1,6 +1,6 @@
 import os
 
-# Gestion sécurisée de dotenv
+# Chargement sécurisé des variables d'environnement
 try:
     from dotenv import load_dotenv
     backend_path = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +18,7 @@ from backend.routers import chat, auth
 
 app = FastAPI(title="Chatbot Administratif Marocain")
 
-# Configuration CORS
+# Configuration des origines CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,12 +36,12 @@ async def global_exception_handler(request: Request, exc: Exception):
         headers={"Access-Control-Allow-Origin": "*"}
     )
 
-# Gestion des fichiers statiques (Images)
+# Gestion des dossiers statiques (Images)
 images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "images")
 if os.path.exists(images_dir):
     app.mount("/images", StaticFiles(directory=images_dir), name="images")
 
-# Inclusions des routeurs
+# Inclusion des routeurs
 app.include_router(auth.router)
 app.include_router(chat.router)
 
