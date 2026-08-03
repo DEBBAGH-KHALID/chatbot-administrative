@@ -1,24 +1,25 @@
-# Web Framework & Server
+# Server & API Framework
 fastapi
 uvicorn
 pydantic
 python-multipart
 
-# Environment & Utilities
+# Environment Utilities
 python-dotenv
 
-# Database & Vector Search
+# Database & Vector Store
 psycopg2-binary
 pgvector
 sqlalchemy
 
-# Security & Authentication
+# Security & Authentication (JWT & Password Hashing)
 python-jose[cryptography]
 passlib[bcrypt]
 bcrypt==4.0.1
 
-# RAG, Data Processing & AI
+# Math & Data Processing
 numpy
-google-generativeai
+
+# AI Libraries (SDK Google GenAI récent & Groq)
+google-genai
 groq
-langchain
