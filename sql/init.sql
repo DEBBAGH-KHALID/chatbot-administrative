@@ -1,18 +1,29 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE documents (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    contenu TEXT NOT NULL,
-    service VARCHAR(50) NOT NULL,
-    categorie VARCHAR(50),
-    embedding VECTOR(1536),
-    created_at TIMESTAMP DEFAULT NOW()
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    nom_complet VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE conversations (
+-- 2. Table des conversations
+CREATE TABLE IF NOT EXISTS conversations (
     id SERIAL PRIMARY KEY,
-    question TEXT,
-    reponse TEXT,
-    langue VARCHAR(10),
-    created_at TIMESTAMP DEFAULT NOW()
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    conversation_id VARCHAR(255) NOT NULL,
+    question TEXT NOT NULL,
+    reponse TEXT NOT NULL,
+    images JSONB DEFAULT '[]'::jsonb,
+    langue VARCHAR(10) DEFAULT 'fr',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS documents (
+    id SERIAL PRIMARY KEY,
+    titre VARCHAR(255) NOT NULL,
+    categorie VARCHAR(100),      
+    contenu TEXT NOT NULL,       
+    fichier_path VARCHAR(255),       
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
