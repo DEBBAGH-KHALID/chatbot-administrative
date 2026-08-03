@@ -2,12 +2,14 @@ import os
 import sys
 import uuid
 import json
+from typing import List
 from fastapi import APIRouter, UploadFile, File, Form, Response, HTTPException, Depends
 from psycopg2.extras import RealDictCursor
 from backend.services.auth_service import get_current_user
 
 # Sécurité pour les chemins d'importation au sein du backend
 backend_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+root_path = os.path.dirname(backend_path)
 if backend_path not in sys.path:
     sys.path.insert(0, backend_path)
 
@@ -22,6 +24,59 @@ from backend.services.rag_service import (
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
+# 🗺️ MAPPING MULTI-SERVICES POUR LES IMAGES STATIQUES (FR, AR, DARIJA)
+SERVICE_IMAGE_MAPPING = {
+    "cnie": {
+        "keywords": ["cnie", "carte nationale", "بطاقة الوطنية", "يلاكات", "cin", "لاكارت"],
+        "folder": "data/images/cin"
+    },
+    "passeport": {
+        "keywords": ["passeport", "جواز السفر", "باسبور"],
+        "folder": "data/images/passeport"
+    },
+    "permis": {
+        "keywords": ["permis", "رخصة السياقة", "بيرمي"],
+        "folder": "data/images/permis"
+    },
+    "mariage": {
+        "keywords": ["mariage", "acte de mariage", "عقد الزواج", "زواج"],
+        "folder": "data/images/marriage"
+    },
+    "carte_bancaire": {
+        "keywords": ["carte bancaire", "banque", "البطاقة البنكية", "كارت بنكير", "الكارت", "بانكير"],
+        "folder": "data/images/la carte bancaire"
+    }
+}
+
+
+def detecter_images_service(question: str) -> List[str]:
+    """
+    Scanne le dossier du service correspondant à la question 
+    et renvoie la liste des chemins d'images à transmettre au frontend.
+    """
+    if not question:
+        return []
+
+    q_lower = question.lower()
+    imgs = []
+
+    for service_key, config in SERVICE_IMAGE_MAPPING.items():
+        # Vérification si la question contient l'un des mots-clés du service
+        if any(kw in q_lower for kw in config["keywords"]):
+            folder_path = os.path.join(root_path, config["folder"])
+            
+            # Si le dossier existe, récupérer toutes les images qu'il contient
+            if os.path.exists(folder_path):
+                for fname in os.listdir(folder_path):
+                    if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                        # Chemin relatif conservé pour le serveur de fichiers statiques
+                        rel_path = f"{config['folder']}/{fname}"
+                        imgs.append(rel_path)
+            break
+
+    return imgs
+
+
 # --- 1. CHAT TEXTUEL PRINCIPAL (AVEC MÉMOIRE & RAG) ---
 
 @router.post("/", response_model=ReponseResponse)
@@ -34,12 +89,17 @@ def poser_question(request: QuestionRequest, current_user: dict = Depends(get_cu
             user_id=current_user["id"]
         )
         
+        # Récupération des images du RAG ou détection automatique si vides
+        images = resultat.get("images", [])
+        if not images:
+            images = detecter_images_service(request.question)
+
         # Sécurisation des clés pour la validation Pydantic
         return ReponseResponse(
             reponse=resultat.get("reponse", ""),
             sources=resultat.get("sources", []),
             langue=resultat.get("langue", "fr"),
-            images=resultat.get("images", []),
+            images=images,
             conversation_id=resultat.get("conversation_id", request.conversation_id)
         )
         
@@ -78,13 +138,18 @@ async def chat_vocal(
             user_id=current_user["id"]
         )
 
+        # Récupération des images du RAG ou détection automatique si vides
+        images = resultat.get("images", [])
+        if not images:
+            images = detecter_images_service(question_texte)
+
         return {
             "conversation_id": conversation_id,
             "question_transcrite": question_texte,
             "reponse": resultat["reponse"],
             "sources": resultat["sources"],
             "langue": resultat.get("langue", langue),
-            "images": resultat["images"]
+            "images": images
         }
 
     except Exception as e:
@@ -155,7 +220,6 @@ def obtenir_historique_db(conversation_id: str = None, limit: int = 50, user_id:
         conn = get_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
-        # AJOUT DE LA COLONNE 'images' DANS LA REQUÊTE SELECT
         if conversation_id:
             cur.execute(
                 """
@@ -185,7 +249,6 @@ def obtenir_historique_db(conversation_id: str = None, limit: int = 50, user_id:
         
         historique_propre = []
         for r in resultats:
-            # Traitement sécurisé du champ JSON / Array des images
             imgs = r.get("images") if isinstance(r, dict) else r[2]
             if isinstance(imgs, str):
                 try:
@@ -199,7 +262,7 @@ def obtenir_historique_db(conversation_id: str = None, limit: int = 50, user_id:
                 historique_propre.append({
                     "question": r["question"],
                     "reponse": r["reponse"],
-                    "images": imgs,  #Désormais transmis au Frontend !
+                    "images": imgs,
                     "created_at": r["created_at"].isoformat() if r.get("created_at") else None
                 })
             else:
