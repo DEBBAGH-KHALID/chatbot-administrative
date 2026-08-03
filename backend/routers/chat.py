@@ -27,23 +27,29 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 # 🗺️ MAPPING MULTI-SERVICES POUR LES IMAGES STATIQUES (FR, AR, DARIJA)
 SERVICE_IMAGE_MAPPING = {
     "cnie": {
-        "keywords": ["cnie", "carte nationale", "بطاقة الوطنية", "يلاكات", "cin", "لاكارت"],
+        "keywords": [
+            "cnie", "carte nationale", "cin", 
+            "بطاقة", "وطنية", "الوطنية", "يلاكات", "لاكارت", "لكارت", "شكل"
+        ],
         "folder": "data/images/cin"
     },
     "passeport": {
-        "keywords": ["passeport", "جواز السفر", "باسبور"],
+        "keywords": ["passeport", "جواز", "السفر", "باسبور", "الباسبور"],
         "folder": "data/images/passeport"
     },
     "permis": {
-        "keywords": ["permis", "رخصة السياقة", "بيرمي"],
+        "keywords": ["permis", "رخصة", "السياقة", "بيرمي", "البيرمي"],
         "folder": "data/images/permis"
     },
     "mariage": {
-        "keywords": ["mariage", "acte de mariage", "عقد الزواج", "زواج"],
+        "keywords": ["mariage", "acte", "عقد", "الزواج", "زواج"],
         "folder": "data/images/marriage"
     },
     "carte_bancaire": {
-        "keywords": ["carte bancaire", "banque", "البطاقة البنكية", "كارت بنكير", "الكارت", "بانكير"],
+        "keywords": [
+            "carte bancaire", "banque", "البنكية", "بنكية", 
+            "كارت بنكير", "الكارت", "بانكير", "بنك"
+        ],
         "folder": "data/images/la carte bancaire"
     }
 }
@@ -51,8 +57,7 @@ SERVICE_IMAGE_MAPPING = {
 
 def detecter_images_service(question: str) -> List[str]:
     """
-    Scanne le dossier du service correspondant à la question 
-    et renvoie la liste des chemins d'images à transmettre au frontend.
+    Scanne et retourne les images du service correspondant à la question.
     """
     if not question:
         return []
@@ -61,21 +66,21 @@ def detecter_images_service(question: str) -> List[str]:
     imgs = []
 
     for service_key, config in SERVICE_IMAGE_MAPPING.items():
-        # Vérification si la question contient l'un des mots-clés du service
+        # Vérification si un des mots-clés est contenu dans la phrase
         if any(kw in q_lower for kw in config["keywords"]):
+            # Dossier absolu sur le serveur Vercel / Local
             folder_path = os.path.join(root_path, config["folder"])
             
-            # Si le dossier existe, récupérer toutes les images qu'il contient
             if os.path.exists(folder_path):
                 for fname in os.listdir(folder_path):
                     if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
-                        # Chemin relatif conservé pour le serveur de fichiers statiques
-                        rel_path = f"{config['folder']}/{fname}"
+                        # Transformation du chemin relatif pour StaticFiles FastAPI (/images/...)
+                        sub_folder = config["folder"].replace("data/images/", "").replace("data/images", "").strip("/")
+                        rel_path = f"/images/{sub_folder}/{fname}" if sub_folder else f"/images/{fname}"
                         imgs.append(rel_path)
             break
 
     return imgs
-
 
 # --- 1. CHAT TEXTUEL PRINCIPAL (AVEC MÉMOIRE & RAG) ---
 
