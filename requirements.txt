@@ -1,4 +1,4 @@
-# Server & API Framework
+# Web Framework & Server
 fastapi
 uvicorn
 pydantic
@@ -14,7 +14,7 @@ psycopg2-binary
 pgvector
 sqlalchemy
 
-# Security & Authentication
+# Security & Authentication (JWT & Password Hashing)
 python-jose[cryptography]
 passlib[bcrypt]
 bcrypt==4.0.1
@@ -23,6 +23,6 @@ bcrypt==4.0.1
 numpy
 langdetect
 
-# AI Libraries (SDK Google GenAI & Groq)
+# AI, Transcription & LLM SDKs (Google GenAI & Groq)
 google-genai
 groq

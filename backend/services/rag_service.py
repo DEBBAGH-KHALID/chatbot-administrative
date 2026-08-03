@@ -247,7 +247,8 @@ def repondre_a_question(
                 imgs = rechercher_images_pertinentes(service=srv)
 
             for img in imgs:
-                url_image = f"http://localhost:8000/images/{img['fichier']}"
+                base_url = os.getenv("API_BASE_URL", "https://chatbot-administrative-et6y.vercel.app")
+                url_image = f"{base_url}/images/{img['fichier']}"
                 if url_image not in images_trouvees:
                     images_trouvees.append(url_image)
 
