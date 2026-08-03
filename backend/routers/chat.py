@@ -24,7 +24,7 @@ from backend.services.rag_service import (
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-# 🗺️ MAPPING MULTI-SERVICES POUR LES IMAGES STATIQUES (FR, AR, DARIJA)
+# MAPPING MULTI-SERVICES POUR LES IMAGES STATIQUES (FR, AR, DARIJA)
 SERVICE_IMAGE_MAPPING = {
     "cnie": {
         "keywords": [
@@ -56,9 +56,7 @@ SERVICE_IMAGE_MAPPING = {
 
 
 def detecter_images_service(question: str) -> List[str]:
-    """
-    Scanne et retourne les images du service correspondant à la question.
-    """
+
     if not question:
         return []
 
@@ -82,7 +80,7 @@ def detecter_images_service(question: str) -> List[str]:
 
     return imgs
 
-# --- 1. CHAT TEXTUEL PRINCIPAL (AVEC MÉMOIRE & RAG) ---
+# 1. CHAT TEXTUEL PRINCIPAL (AVEC MÉMOIRE & RAG)
 
 @router.post("/", response_model=ReponseResponse)
 def poser_question(request: QuestionRequest, current_user: dict = Depends(get_current_user)):
@@ -113,7 +111,7 @@ def poser_question(request: QuestionRequest, current_user: dict = Depends(get_cu
         raise HTTPException(status_code=500, detail=f"Erreur serveur lors du traitement : {str(e)}")
 
 
-# --- 2. ENDPOINT VOCAL SPEECH-TO-SPEECH ---
+#  2. ENDPOINT VOCAL SPEECH-TO-SPEECH 
 
 @router.post("/vocal")
 async def chat_vocal(
@@ -161,7 +159,7 @@ async def chat_vocal(
         raise HTTPException(status_code=500, detail=f"Erreur lors du traitement vocal : {str(e)}")
 
 
-# --- 3. LISTE DES CONVERSATIONS UTILISATEUR (POUR LA SIDEBAR) ---
+#  3. LISTE DES CONVERSATIONS UTILISATEUR (POUR LA SIDEBAR) 
 
 @router.get("/mes-conversations")
 def mes_conversations(current_user: dict = Depends(get_current_user)):
@@ -208,7 +206,7 @@ def mes_conversations(current_user: dict = Depends(get_current_user)):
         return []
 
 
-# --- 4. HISTORIQUE DÉTAILLÉ DE CONVERSATION ---
+#  4. HISTORIQUE DÉTAILLÉ DE CONVERSATION 
 
 @router.get("/historique/{conversation_id}")
 def get_historique_par_id(conversation_id: str, limit: int = 50, current_user: dict = Depends(get_current_user)):
