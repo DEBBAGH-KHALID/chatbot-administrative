@@ -1,25 +1,44 @@
 import os
-from dotenv import load_dotenv
 
-# 1. Charger le fichier .env immédiatement (vu qu'on lance depuis la racine, il cherche dans backend/.env)
-backend_path = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(dotenv_path=os.path.join(backend_path, ".env"))
+# 1. Gestion sécurisée de dotenv (pour éviter d'exiger python-dotenv en prod)
+try:
+    from dotenv import load_dotenv
+    backend_path = os.path.dirname(os.path.abspath(__file__))
+    load_dotenv(dotenv_path=os.path.join(backend_path, ".env"))
+except Exception:
+    pass
+
 from fastapi import FastAPI
-from backend.routers import chat, auth
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Chatbot Administratif Marocain")
-from fastapi.middleware.cors import CORSMiddleware
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En développement, autorise toutes les origines (ex: http://localhost:5173)
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Autorise POST, GET, OPTIONS, etc.
+    allow_methods=["*"],
     allow_headers=["*"],
 )
-app.mount("/images", StaticFiles(directory="data/images"), name="images")
+
+# 2. Gestion sécurisée du dossier StaticFiles (évite les crashs si le dossier n'existe pas)
+images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "images")
+if os.path.exists(images_dir):
+    app.mount("/images", StaticFiles(directory=images_dir), name="images")
+
+# 3. Imports sécurisés des routeurs
+try:
+    from backend.routers import chat, auth
+except ImportError:
+    from routers import chat, auth
+
 app.include_router(auth.router)
 app.include_router(chat.router)
+
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "API Chatbot Administratif Marocain fonctionnelle !"}
 
 @app.get("/health")
 def health_check():
