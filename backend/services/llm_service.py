@@ -1,60 +1,62 @@
-
+import os
+import time
 from google import genai
 from google.genai import types
-from dotenv import load_dotenv
+from backend.prompts import PROMPTS_PAR_LANGUE
 
+# Initialisation du client (récupère automatiquement GEMINI_API_KEY depuis le .env)
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Initialisation du client natif Gemini
-client = genai.Client()
-MODEL_NAME = "gemini-2.5-flash"
+# Liste des modèles à essayer dans l'ordre de priorité
+MODELS_TO_TRY = [
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-flash-latest",
+    "gemini-3.5-flash"
+]
 
-# Dictionnaire de prompts systèmes selon la langue détectée
-PROMPTS_PAR_LANGUE = {
-    "fr": """Tu es un assistant administratif marocain. Réponds en FRANÇAIS UNIQUEMENT.
-Règles importantes :
-- Réponds UNIQUEMENT à partir des informations fournies dans le contexte ci-dessous.
-- Si l'information n'est pas dans le contexte, dis-le clairement et invite à contacter l'administration compétente.
-- Ne jamais inventer de pièces, tarifs, délais ou conditions.
-- Sois clair, structuré (utilise des listes à puces si nécessaire) et concis.""",
+def generer_reponse(question: str, contexte: str, langue: str = "fr", historique: str = "") -> str:
+    # 1. Récupération des consignes système selon la langue sélectionnée
+    system_instruction = PROMPTS_PAR_LANGUE.get(langue, PROMPTS_PAR_LANGUE["fr"])
 
-    "ar": """أنت مساعد إداري مغربي. أجب باللغة العربية فقط.
-قواعد مهمة:
-- أجب فقط بناءً على المعلومات المتوفرة في السياق أسفله.
-- إذا لم تكن المعلومة متوفرة، وضّح ذلك بصراحة وانصح بالتواصل مع الإدارة المعنية.
-- لا تخترع أي وثائق أو شروط أو آجال غير موجودة في السياق.
-- كن واضحًا ومنظمًا ومختصرًا.""",
+    # 2. Construction du prompt utilisateur (séparé du système)
+    user_prompt = f"""HISTORIQUE DE LA CONVERSATION :
+{historique if historique else "(Début de discussion)"}
 
-    "darija": """Nta assistant idari maghribi. Jaweb b darija b horouf latine (Arabizi) (kifma katb l'utilisateur).
-Qwanine mouhima:
-- Jaweb ghir b les infos li kaynin f context li lteht.
-- Ila l'information machi mawjouda, goul had chi b sarraha o goul l'utilisateur ychouf l'idara lma3eniya.
-- Ma tkhtare3ch des documents wla des délais wla des conditions wla des tarifs li machi f context.
-- Kon wadeh omekhetasser."""
-}
+CONTEXTE EXTRAIT DES DOCUMENTS OFFICIELS :
+{contexte if contexte else "L'utilisateur demande des informations administratives ou un visuel."}
 
-def generer_reponse(question: str, contexte: str, langue: str = "fr") -> str:
-    """
-    Génère une réponse avec Gemini 2.5 Flash en injectant le prompt système
-    adapté à la langue détectée.
-    """
-    try:
-        # Récupération du prompt correspondant ou repli sur le français
-        system_instruction = PROMPTS_PAR_LANGUE.get(langue, PROMPTS_PAR_LANGUE["fr"])
-        
-        # Construction du message utilisateur contenant le contexte et la question
-        prompt_utilisateur = f"Contexte :\n{contexte}\n\nQuestion : {question}\nRéponse :"
-        
-        # Appel à Gemini avec la config système dédiée à la langue
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=prompt_utilisateur,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.2  # Reste bas pour éviter les hallucinations
+QUESTION DE L'UTILISATEUR :
+{question}"""
+
+    config = types.GenerateContentConfig(
+        system_instruction=system_instruction,
+        temperature=0.2
+    )
+
+    # 3. Boucle de génération avec fallback
+    for model_name in MODELS_TO_TRY:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=user_prompt,
+                config=config
             )
-        )
-       
-        return response.text
-    except Exception as e:
-        print(f" ERREUR DANS LLM_SERVICE : {e}")
-        return "Désolé, une erreur technique est survenue lors de la génération de la réponse.عذرًا، حدث خطأ تقني أثناء إنشاء الإجابة"
+
+            if response.text and response.text.strip():
+                return response.text.strip()
+
+        except Exception as e:
+            error_msg = repr(e)
+            print(f"Échec du modèle {model_name} : {error_msg[:120]}...")
+            
+            
+            # on fait une petite pause de 1 seconde puis on passe au modèle suivant.
+            if "429" in error_msg or "503" in error_msg:
+                time.sleep(1)
+                continue
+            else:
+                continue
+
+    # 4. Message de secours si tous les quotas/modèles ont échoué en même temps
+    return "L'assistant est très sollicité actuellement. Veuillez patienter une vingtaine de secondes avant de poser votre prochaine question."

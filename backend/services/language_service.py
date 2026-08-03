@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 from langdetect import detect, DetectorFactory
 
 # Sécurité pour les imports
@@ -9,29 +10,33 @@ if backend_path not in sys.path:
 
 DetectorFactory.seed = 0  # Garantit des résultats reproductibles
 
-# Mots fréquents en darija écrite en caractères latins 
-MOTS_DARIJA = [
+# Mots fréquents en Darija écrite en caractères latins (Arabizi)
+MOTS_DARIJA_LATIN = [
     "wach", "bghit", "3afak", "chno", "kifach", "fin", "wa9t",
-    "mennin", "kayn", "makaynch", "bzaf", "daba", "chokran", "chhal", "db"
+    "mennin", "kayn", "makaynch", "bzaf", "daba", "chokran", "chhal", "db", "ngad", "ngaduh"
 ]
+
+def contient_caracteres_arabes(texte: str) -> bool:
+    """Vérifie si le texte contient de l'alphabet arabe."""
+    return bool(re.search(r'[\u0600-\u06FF]', texte))
 
 def detecter_langue(texte: str) -> str:
     texte_lower = texte.lower()
     
-  
-    # Si le texte contient au moins un des mots-clés typiques du dialecte marocain
-    if any(mot in texte_lower for mot in MOTS_DARIJA):
+    # 1. Si le texte contient des lettres arabes -> Darija (en écriture arabe)
+    if contient_caracteres_arabes(texte):
+        return "darija"
+
+    # 2. Si le texte contient des mots-clés en Darija latine (Arabizi)
+    if any(mot in texte_lower for mot in MOTS_DARIJA_LATIN):
         return "darija"
         
-    # 2. Détection classique pour l'arabe (lettres arabes) ou le français
+    # 3. Détection pour le Français (ou fallback)
     try:
         langue_detectee = detect(texte)
+        if langue_detectee == "fr":
+            return "fr"
     except Exception:
-        return "fr"  # Fallback par défaut si le texte est vide ou indétectable
-        
-    if langue_detectee == "ar":
-        return "ar"
-    elif langue_detectee == "fr":
         return "fr"
-    else:
-        return "fr"  # Fallback pour le reste (ex: anglais détecté par erreur)
+        
+    return "fr"
