@@ -8,9 +8,9 @@ backend_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if backend_path not in sys.path:
     sys.path.insert(0, backend_path)
 
-DetectorFactory.seed = 0  # Garantit des résultats reproductibles
+DetectorFactory.seed = 0  
 
-# Mots fréquents en Darija écrite en caractères latins (Arabizi)
+# Mots fréquents en Darija écrite en caractères latins
 MOTS_DARIJA_LATIN = [
     "wach", "bghit", "3afak", "chno", "kifach", "fin", "wa9t",
     "mennin", "kayn", "makaynch", "bzaf", "daba", "chokran", "chhal", "db", "ngad", "ngaduh"
