@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 # Chargement sécurisé des variables d'environnement
 try:
@@ -36,10 +37,18 @@ async def global_exception_handler(request: Request, exc: Exception):
         headers={"Access-Control-Allow-Origin": "*"}
     )
 
-# Gestion des dossiers statiques (Images)
-images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "images")
-if os.path.exists(images_dir):
-    app.mount("/images", StaticFiles(directory=images_dir), name="images")
+# 🎯 Gestion des dossiers statiques (Images) avec résolution robuste pour Vercel
+BASE_DIR = Path(__file__).resolve().parent.parent
+images_dir = BASE_DIR / "data" / "images"
+
+# Secours / Fallback spécifique au répertoire Serverless Vercel si besoin
+if not images_dir.exists():
+    images_dir = Path("/var/task/data/images")
+
+print(f"--> IMAGES_DIR: {images_dir} (Existe: {images_dir.exists()})")
+
+if images_dir.exists():
+    app.mount("/images", StaticFiles(directory=str(images_dir)), name="images")
 
 # Inclusion des routeurs
 app.include_router(auth.router)
