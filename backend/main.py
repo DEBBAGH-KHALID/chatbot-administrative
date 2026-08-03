@@ -1,6 +1,5 @@
 import os
 
-# Gestion sécurisée de dotenv (évite le crash si la lib n'est pas installée)
 try:
     from dotenv import load_dotenv
     backend_path = os.path.dirname(os.path.abspath(__file__))
@@ -8,15 +7,17 @@ try:
 except Exception:
     pass
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 
-# Import direct et propre des routeurs
+# Imports des routeurs
 from backend.routers import chat, auth
 
 app = FastAPI(title="Chatbot Administratif Marocain")
 
+# Configuration CORS globale
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,7 +26,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Gestion du dossier StaticFiles sur Vercel
+# Intercepteur d'erreurs globales : Force le renvoi des headers CORS même en cas de crash
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Erreur serveur interne : {str(exc)}"},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
+
+# Fast-path pour les requêtes de vérification OPTIONS (CORS preflight)
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    return JSONResponse(
+        content="OK",
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
+# Gestion du dossier des images
 images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "images")
 if os.path.exists(images_dir):
     app.mount("/images", StaticFiles(directory=images_dir), name="images")
