@@ -12,6 +12,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+# Import direct et propre des routeurs
+from backend.routers import chat, auth
+
 app = FastAPI(title="Chatbot Administratif Marocain")
 
 app.add_middleware(
@@ -22,16 +25,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Gestion du dossier StaticFiles
+# Gestion du dossier StaticFiles sur Vercel
 images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "images")
 if os.path.exists(images_dir):
     app.mount("/images", StaticFiles(directory=images_dir), name="images")
-
-# Imports sécurisés des routeurs
-try:
-    from backend.routers import chat, auth
-except ImportError:
-    from routers import chat, auth
 
 app.include_router(auth.router)
 app.include_router(chat.router)
