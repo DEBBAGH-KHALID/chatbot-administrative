@@ -12,14 +12,15 @@ psycopg2-binary
 pgvector
 sqlalchemy
 
-# Security & Authentication (JWT & Password Hashing)
+# Security & Authentication
 python-jose[cryptography]
 passlib[bcrypt]
 bcrypt==4.0.1
 
-# Math & Data Processing
+# Math, Language & Data Processing
 numpy
+langdetect
 
-# AI Libraries (SDK Google GenAI récent & Groq)
+# AI Libraries (SDK Google GenAI & Groq)
 google-genai
 groq
