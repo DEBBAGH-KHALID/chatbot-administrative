@@ -1,6 +1,6 @@
 import os
 
-# 1. Gestion sécurisée de dotenv (pour éviter d'exiger python-dotenv en prod)
+# Gestion sécurisée de dotenv (évite le crash si la lib n'est pas installée)
 try:
     from dotenv import load_dotenv
     backend_path = os.path.dirname(os.path.abspath(__file__))
@@ -22,12 +22,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Gestion sécurisée du dossier StaticFiles (évite les crashs si le dossier n'existe pas)
+# Gestion du dossier StaticFiles
 images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "images")
 if os.path.exists(images_dir):
     app.mount("/images", StaticFiles(directory=images_dir), name="images")
 
-# 3. Imports sécurisés des routeurs
+# Imports sécurisés des routeurs
 try:
     from backend.routers import chat, auth
 except ImportError:
@@ -38,7 +38,7 @@ app.include_router(chat.router)
 
 @app.get("/")
 def read_root():
-    return {"status": "ok", "message": "API Chatbot Administratif Marocain fonctionnelle !"}
+    return {"status": "ok", "message": "API Chatbot fonctionnelle !"}
 
 @app.get("/health")
 def health_check():
