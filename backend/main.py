@@ -25,6 +25,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+#  CAPTURE D'ERREUR POUR DEBUGGING
+@app.exception_handler(Exception)
+async def debug_exception_handler(request: Request, exc: Exception):
+    error_trace = traceback.format_exc()
+    print("CRASH SERVEUR :", error_trace)  # S'affichera instantanément dans Vercel Logs
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error_type": type(exc).__name__,
+            "message": str(exc),
+            "traceback": error_trace.splitlines()[-3:]  # Les 3 dernières lignes du crash
+        },
+        headers={"Access-Control-Allow-Origin": "*"}
 
 # Intercepteur d'erreurs globales : Force le renvoi des headers CORS même en cas de crash
 @app.exception_handler(Exception)
