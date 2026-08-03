@@ -2,6 +2,8 @@
 fastapi
 uvicorn
 pydantic
+pydantic[email]
+email-validator
 python-multipart
 
 # Environment Utilities
