@@ -17,7 +17,7 @@ def get_connection():
     # Sécurité pour diagnostiquer immédiatement si le .env n'est pas lu
     if not DATABASE_URL:
         raise ValueError(
-            f"❌ Erreur : Impossible de lire DATABASE_URL.\n"
+            f"Erreur : Impossible de lire DATABASE_URL.\n"
             f"Vérifie que le fichier .env existe bien à l'emplacement : {ENV_PATH}"
         )
     
