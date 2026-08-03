@@ -26,7 +26,7 @@ MESSAGES_ABSENCE_INFO = {
 }
 
 
-# --- 1. FONCTIONS DE GESTION DE L'HISTORIQUE ---
+#  1. FONCTIONS DE GESTION DE L'HISTORIQUE 
 
 def recuperer_historique(conversation_id: str, limit: int = 6) -> list[dict]:
     if not conversation_id:
@@ -82,7 +82,7 @@ def sauvegarder_echange(
         print("ERREUR SAUVEGARDE HISTORIQUE :", repr(e))
 
 
-# --- 2. FONCTIONS DE RECHERCHE LOCALE (BDD) ---
+#  2. FONCTIONS DE RECHERCHE LOCALE (BDD
 
 def embed_texte_query(texte: str) -> list[float]:
     response = client.models.embed_content(
@@ -295,7 +295,7 @@ def transcrire_audio_gemini(audio_bytes: bytes, mime_type: str = "audio/webm") -
             transcription = groq_client.audio.transcriptions.create(
                 file=(temp_audio_path, file.read()),
                 model="whisper-large-v3",
-                language="ar"  # Ou "fr" / détection automatique
+                language="ar"  
             )
 
         os.remove(temp_audio_path)
