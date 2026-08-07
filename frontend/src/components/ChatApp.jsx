@@ -649,7 +649,7 @@ export default function ChatApp() {
 
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-xs overflow-hidden shrink-0">
-                <img src="/logo_chat.png" alt="Assistant Logo" className="w-full h-full object-contain scale-[1.4]" />
+                <img src="/logo_chat.png" alt="Assistant Logo" className="w-full h-full object-contain scale-[1.3]" />
               </div>
               <div>
                 <h1 className="font-bold text-base text-slate-900 tracking-wide flex items-center gap-2">Assistant Administratif Marocain <span className="text-sm">🇲🇦</span></h1>
