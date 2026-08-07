@@ -649,7 +649,7 @@ export default function ChatApp() {
 
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-xs overflow-hidden shrink-0">
-                <img src="/logo_chat.png" alt="Assistant Logo" className="w-full h-full object-contain scale-[1.6]" />
+                <img src="/logo_chat.png" alt="Assistant Logo" className="w-full h-full object-contain scale-[1.4]" />
               </div>
               <div>
                 <h1 className="font-bold text-base text-slate-900 tracking-wide flex items-center gap-2">Assistant Administratif Marocain <span className="text-sm">🇲🇦</span></h1>
@@ -717,7 +717,7 @@ export default function ChatApp() {
                 <div key={msg.id} className={`flex gap-3 sm:gap-4 ${isUser ? "justify-end" : "justify-start"} animate-fadeIn`}>
                   {!isUser && (
                     <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-xs mt-1 overflow-hidden">
-                      <img src="/logo_chat.png" alt="Bot" className="w-full h-full object-contain scale-[1.5]" />
+                      <img src="/logo_chat.png" alt="Bot" className="w-full h-full object-contain scale-[1.4]" />
                     </div>
                   )}
 
